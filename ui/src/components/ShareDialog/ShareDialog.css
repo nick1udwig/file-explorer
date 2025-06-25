@@ -1,0 +1,101 @@
+.share-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.share-dialog {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 400px;
+  box-shadow: 0 4px 16px var(--shadow-color);
+  border: 1px solid var(--border-color);
+}
+
+.share-dialog h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.share-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.share-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.share-button {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--link-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.share-button:hover:not(:disabled) {
+  background-color: var(--link-hover);
+}
+
+.share-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.share-link-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.share-link-input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap: 8px;
+}
+
+.dialog-actions button {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dialog-actions button:hover {
+  background-color: var(--bg-hover);
+}

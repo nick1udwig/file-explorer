@@ -1,0 +1,51 @@
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: var(--text-primary);
+}
+
+.file-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.file-item.selected {
+  background-color: var(--bg-selected);
+}
+
+.file-item-list {
+  gap: 16px;
+}
+
+.file-item-grid {
+  flex-direction: column;
+  text-align: center;
+  padding: 16px 8px;
+}
+
+.file-icon {
+  font-size: 20px;
+}
+
+.file-item-grid .file-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size,
+.file-modified {
+  color: var(--text-secondary);
+  font-size: 14px;
+  min-width: 100px;
+}

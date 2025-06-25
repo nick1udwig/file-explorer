@@ -1,9 +1,9 @@
 {
-  "name": "id",
-  "description": "Prove your Hyperware id",
+  "name": "file-explorer",
+  "description": "VFS file explorer with Windows-like UX and file sharing",
   "image": "",
   "properties": {
-    "package_name": "id",
+    "package_name": "file-explorer",
     "current_version": "0.1.0",
     "publisher": "sys",
     "mirrors": [],
@@ -11,9 +11,7 @@
       "0.1.0": ""
     },
     "wit_version": 1,
-    "dependencies": [
-        "sign:sys"
-    ]
+    "dependencies": []
   },
   "external_url": "https://hyperware.ai",
   "animation_url": ""
