@@ -3,6 +3,8 @@ use hyperware_app_common::hyperware_process_lib::logging::{init_logging, Level, 
 use hyperware_app_common::hyperware_process_lib::vfs::{self, FileType};
 use std::collections::HashMap;
 
+const PROCESS_ID_LINK: &str = "explorer:file-explorer:sys";
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileInfo {
@@ -42,8 +44,8 @@ struct FileExplorerState {
             config: WsBindingConfig::default(),
         },
         Binding::Http {
-            path: "/shared",
-            config: HttpBindingConfig::default(),
+            path: "/shared/*",
+            config: HttpBindingConfig::default().authenticated(false),
         }
     ],
     save_config = SaveOptions::Never,
@@ -200,8 +202,8 @@ impl FileExplorerState {
         // Add to shared_files HashMap
         self.shared_files.insert(path.clone(), auth);
 
-        // Return share link
-        Ok(format!("/shared/{}", share_id))
+        // Return share link with full path
+        Ok(format!("/{PROCESS_ID_LINK}/shared/{share_id}"))
     }
 
     #[http]
@@ -214,7 +216,7 @@ impl FileExplorerState {
         // Check if file is shared
         if self.shared_files.contains_key(&path) {
             let share_id = format!("{:x}", md5::compute(&path));
-            Ok(Some(format!("/shared/{}", share_id)))
+            Ok(Some(format!("/{PROCESS_ID_LINK}/shared/{share_id}")))
         } else {
             Ok(None)
         }
@@ -303,17 +305,17 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
     debug!("VFS returned {} entries for path '{}'", entries.len(), path);
 
     let mut all_files = Vec::new();
-    
+
     // Convert to FileInfo - Level 1
     for (i, entry) in entries.iter().enumerate() {
         debug!("Entry[{}]: path='{}', file_type={:?}", i, entry.path, entry.file_type);
-        
+
         // VFS already provides absolute paths in entry.path
         let full_path = entry.path.clone();
 
         // Extract filename from the path
         let filename = entry.path.split('/').last().unwrap_or("").to_string();
-        
+
         debug!("Constructed: filename='{}', full_path='{}'", filename, full_path);
 
         if entry.file_type == FileType::Directory {
@@ -322,7 +324,7 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
                 path: full_path.clone(),
                 timeout: 5,
             };
-            
+
             let dir_size = match sub_dir.read() {
                 Ok(contents) => {
                     let count = contents.len() as u64;
@@ -344,25 +346,25 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
                 is_directory: true,
                 permissions: "rw".to_string(),
             };
-            
+
             all_files.push(file_info);
-            
+
             // Load one level deep into directories
             let sub_dir2 = vfs::Directory {
                 path: full_path.clone(),
                 timeout: 5,
             };
-            
+
             if let Ok(sub_entries) = sub_dir2.read() {
                 debug!("Loading {} sub-entries from '{}'", sub_entries.len(), full_path);
-                
+
                 for sub_entry in sub_entries {
                     // VFS already provides absolute paths in sub_entry.path
                     let sub_full_path = sub_entry.path.clone();
                     let sub_filename = sub_entry.path.split('/').last().unwrap_or("").to_string();
-                    
+
                     debug!("Sub-entry: path='{}', filename='{}', file_type={:?}", sub_full_path, sub_filename, sub_entry.file_type);
-                    
+
                     if sub_entry.file_type == FileType::Directory {
                         all_files.push(FileInfo {
                             name: sub_filename,
