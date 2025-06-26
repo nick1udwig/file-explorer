@@ -6,12 +6,13 @@ import ShareDialog from '../ShareDialog/ShareDialog';
 import './FileItem.css';
 
 interface FileItemProps {
-  file: FileInfo;
+  file: FileInfo & { children?: FileInfo[] };
   viewMode: 'list' | 'grid';
   onNavigate: (path: string) => void;
+  depth?: number;
 }
 
-const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate }) => {
+const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth = 0 }) => {
   const { selectedFiles, toggleFileSelection } = useFileExplorerStore();
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -75,15 +76,22 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const hasChildren = file.isDirectory && file.children && file.children.length > 0;
+
   return (
     <>
       <div
         className={`file-item file-item-${viewMode} ${isSelected ? 'selected' : ''}`}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
+        style={{ paddingLeft: `${depth * 20 + 10}px` }}
       >
         {file.isDirectory && viewMode === 'list' && (
-          <button className="expand-toggle" onClick={handleExpandToggle}>
+          <button 
+            className="expand-toggle" 
+            onClick={handleExpandToggle}
+            style={{ visibility: hasChildren ? 'visible' : 'hidden' }}
+          >
             {isExpanded ? '▼' : '▶'}
           </button>
         )}
@@ -100,6 +108,21 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate }) => {
           </>
         )}
       </div>
+      
+      {/* Render children when expanded */}
+      {isExpanded && hasChildren && viewMode === 'list' && (
+        <div className="file-children">
+          {file.children!.map((child) => (
+            <FileItem
+              key={child.path}
+              file={child as FileInfo & { children?: FileInfo[] }}
+              viewMode={viewMode}
+              onNavigate={onNavigate}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
 
       {contextMenuOpen && (
         <ContextMenu
