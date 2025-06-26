@@ -9,9 +9,10 @@ interface FileListProps {
   loading: boolean;
   onNavigate: (path: string) => void;
   currentPath: string;
+  onLoadSubdirectory?: (path: string) => Promise<FileInfo[]>;
 }
 
-const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigate, currentPath }) => {
+const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigate, currentPath, onLoadSubdirectory }) => {
   if (loading) {
     return <div className="file-list-loading">Loading...</div>;
   }
@@ -34,16 +35,12 @@ const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigat
     const fileWithChildren = fileMap.get(file.path)!;
     const parentPath = file.path.substring(0, file.path.lastIndexOf('/'));
     
-    console.log(`Building tree: file=${file.path}, parentPath=${parentPath}`);
     
     if (fileMap.has(parentPath)) {
       // This file has a parent in our list
       const parent = fileMap.get(parentPath)!;
       if (!parent.children) parent.children = [];
       parent.children.push(fileWithChildren);
-      console.log(`  Added ${file.path} as child of ${parentPath}`);
-    } else {
-      console.log(`  No parent found for ${file.path}`);
     }
   });
   
@@ -95,6 +92,7 @@ const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigat
           viewMode={viewMode}
           onNavigate={onNavigate}
           depth={0}
+          onLoadSubdirectory={onLoadSubdirectory}
         />
       ))}
     </div>

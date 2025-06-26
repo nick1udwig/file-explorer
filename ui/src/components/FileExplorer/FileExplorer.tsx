@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import useFileExplorerStore from '../../store/fileExplorer';
-import { listDirectory, createDirectory, deleteFile, deleteDirectory } from '../../types/api';
+import { listDirectory, createDirectory, deleteFile, deleteDirectory, FileInfo } from '../../types/api';
 import FileList from './FileList';
 import Breadcrumb from './Breadcrumb';
 import Toolbar from './Toolbar';
@@ -24,13 +24,10 @@ const FileExplorer: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const loadDirectory = async (path: string) => {
-    console.log('Loading directory:', path);
     try {
       setLoading(true);
       setError(null);
       const fileList = await listDirectory(path);
-      console.log('Received files:', fileList);
-      console.log('Total files received:', fileList.length);
       
       // Backend returns files for the requested directory with 2 levels of depth
       // We need to include all files so the tree structure works, but we'll filter
@@ -43,13 +40,28 @@ const FileExplorer: React.FC = () => {
         return true;
       });
       
-      console.log(`Setting ${filteredFiles.length} files`);
       setFiles(filteredFiles);
     } catch (err) {
-      console.error('Error loading directory:', err);
       setError(err instanceof Error ? err.message : 'Failed to load directory');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSubdirectory = async (path: string): Promise<FileInfo[]> => {
+    try {
+      const fileList = await listDirectory(path);
+      
+      // Filter out the directory itself and return only its contents
+      const filteredFiles = fileList.filter(file => {
+        if (file.path === path) return false; // Exclude the directory itself
+        return true;
+      });
+      
+      return filteredFiles;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load subdirectory');
+      return [];
     }
   };
 
@@ -135,6 +147,7 @@ const FileExplorer: React.FC = () => {
           loading={loading}
           onNavigate={handleNavigate}
           currentPath={currentPath}
+          onLoadSubdirectory={loadSubdirectory}
         />
       </UploadZone>
     </div>

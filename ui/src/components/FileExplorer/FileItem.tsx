@@ -10,9 +10,10 @@ interface FileItemProps {
   viewMode: 'list' | 'grid';
   onNavigate: (path: string) => void;
   depth?: number;
+  onLoadSubdirectory?: (path: string) => Promise<FileInfo[]>;
 }
 
-const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth = 0 }) => {
+const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth = 0, onLoadSubdirectory }) => {
   const { selectedFiles, toggleFileSelection } = useFileExplorerStore();
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -21,13 +22,14 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
   const isSelected = selectedFiles.includes(file.path);
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [childrenLoaded, setChildrenLoaded] = useState(false);
+  const [loadedChildren, setLoadedChildren] = useState<(FileInfo & { children?: FileInfo[] })[]>([]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (e.ctrlKey || e.metaKey) {
       toggleFileSelection(file.path);
     } else if (e.detail === 2 && file.isDirectory) {
       // Double click navigates into directories
-      console.log('Double-click on directory:', file.path);
       onNavigate(file.path);
     } else if (!file.isDirectory) {
       // Single click selects files
@@ -35,13 +37,65 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
     }
   };
 
-  const handleExpandToggle = (e: React.MouseEvent) => {
+  const buildTreeFromFlatList = (flatList: FileInfo[], parentPath: string): (FileInfo & { children?: FileInfo[] })[] => {
+    const fileMap = new Map<string, FileInfo & { children?: FileInfo[] }>();
+    const topLevelFiles: (FileInfo & { children?: FileInfo[] })[] = [];
+    
+    // First pass: create map of all files
+    flatList.forEach(file => {
+      fileMap.set(file.path, { ...file, children: [] });
+    });
+    
+    // Second pass: build parent-child relationships
+    flatList.forEach(file => {
+      const fileWithChildren = fileMap.get(file.path)!;
+      const fileParentPath = file.path.substring(0, file.path.lastIndexOf('/'));
+      
+      if (fileMap.has(fileParentPath)) {
+        // This file has a parent in our list
+        const parent = fileMap.get(fileParentPath)!;
+        if (!parent.children) parent.children = [];
+        parent.children.push(fileWithChildren);
+      } else if (fileParentPath === parentPath) {
+        // This is a direct child of the parent directory
+        topLevelFiles.push(fileWithChildren);
+      }
+    });
+    
+    // Sort files: directories first, then by name
+    const sortFiles = (files: (FileInfo & { children?: FileInfo[] })[]) => {
+      return [...files].sort((a, b) => {
+        if (a.isDirectory && !b.isDirectory) return -1;
+        if (!a.isDirectory && b.isDirectory) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    };
+    
+    // Recursively sort all children
+    const sortRecursive = (files: (FileInfo & { children?: FileInfo[] })[]) => {
+      const sorted = sortFiles(files);
+      sorted.forEach(file => {
+        if (file.children && file.children.length > 0) {
+          file.children = sortRecursive(file.children);
+        }
+      });
+      return sorted;
+    };
+    
+    return sortRecursive(topLevelFiles);
+  };
+
+  const handleExpandToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Expand toggle clicked for:', file.path);
-    console.log('Current isExpanded:', isExpanded);
-    console.log('Has children?', hasChildren);
-    console.log('Children:', file.children);
-    console.log('Children length:', file.children?.length);
+    
+    // If expanding and we haven't loaded children yet, load them
+    if (!isExpanded && file.isDirectory && !childrenLoaded && onLoadSubdirectory) {
+      const flatChildren = await onLoadSubdirectory(file.path);
+      const treeChildren = buildTreeFromFlatList(flatChildren, file.path);
+      setLoadedChildren(treeChildren);
+      setChildrenLoaded(true);
+    }
+    
     setIsExpanded(!isExpanded);
   };
 
@@ -81,7 +135,9 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const hasChildren = file.isDirectory && file.children && file.children.length > 0;
+  // Determine which children to use - loaded children take precedence
+  const childrenToRender = childrenLoaded ? loadedChildren : (file.children || []);
+  const hasChildren = file.isDirectory && (childrenToRender.length > 0 || !childrenLoaded);
 
   return (
     <>
@@ -111,19 +167,16 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
       </div>
       
       {/* Render children when expanded */}
-      {isExpanded && hasChildren && viewMode === 'list' && (
+      {isExpanded && viewMode === 'list' && childrenToRender.length > 0 && (
         <div className="file-children">
-          {(() => {
-            console.log('Rendering children for:', file.path, 'Children:', file.children);
-            return null;
-          })()}
-          {file.children!.map((child) => (
+          {childrenToRender.map((child) => (
             <FileItem
               key={child.path}
               file={child as FileInfo & { children?: FileInfo[] }}
               viewMode={viewMode}
               onNavigate={onNavigate}
               depth={depth + 1}
+              onLoadSubdirectory={onLoadSubdirectory}
             />
           ))}
         </div>
