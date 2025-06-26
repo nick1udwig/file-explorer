@@ -288,8 +288,7 @@ impl FileExplorerState {
 
 // Helper function to list directory contents with 2 levels of depth
 async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
-    info!("=== list_directory_contents START ===");
-    info!("Requested path: '{}'", path);
+    debug!("list_directory_contents: path='{}'", path);
 
     // Open directory
     let dir = vfs::Directory {
@@ -301,13 +300,13 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
     let entries = dir.read()
         .map_err(|e| format!("Failed to read directory '{}': {}", path, e))?;
 
-    info!("VFS returned {} entries for path '{}'", entries.len(), path);
+    debug!("VFS returned {} entries for path '{}'", entries.len(), path);
 
     let mut all_files = Vec::new();
     
     // Convert to FileInfo - Level 1
     for (i, entry) in entries.iter().enumerate() {
-        info!("Entry[{}]: path='{}', file_type={:?}", i, entry.path, entry.file_type);
+        debug!("Entry[{}]: path='{}', file_type={:?}", i, entry.path, entry.file_type);
         
         // VFS already provides absolute paths in entry.path
         let full_path = entry.path.clone();
@@ -315,7 +314,7 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
         // Extract filename from the path
         let filename = entry.path.split('/').last().unwrap_or("").to_string();
         
-        info!("Constructed: filename='{}', full_path='{}'", filename, full_path);
+        debug!("Constructed: filename='{}', full_path='{}'", filename, full_path);
 
         if entry.file_type == FileType::Directory {
             // Get directory size
@@ -327,7 +326,7 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
             let dir_size = match sub_dir.read() {
                 Ok(contents) => {
                     let count = contents.len() as u64;
-                    info!("Directory '{}' has {} items", full_path, count);
+                    debug!("Directory '{}' has {} items", full_path, count);
                     count
                 },
                 Err(e) => {
@@ -355,14 +354,14 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
             };
             
             if let Ok(sub_entries) = sub_dir2.read() {
-                info!("Loading {} sub-entries from '{}'", sub_entries.len(), full_path);
+                debug!("Loading {} sub-entries from '{}'", sub_entries.len(), full_path);
                 
                 for sub_entry in sub_entries {
                     // VFS already provides absolute paths in sub_entry.path
                     let sub_full_path = sub_entry.path.clone();
                     let sub_filename = sub_entry.path.split('/').last().unwrap_or("").to_string();
                     
-                    info!("Sub-entry: path='{}', filename='{}', file_type={:?}", sub_full_path, sub_filename, sub_entry.file_type);
+                    debug!("Sub-entry: path='{}', filename='{}', file_type={:?}", sub_full_path, sub_filename, sub_entry.file_type);
                     
                     if sub_entry.file_type == FileType::Directory {
                         all_files.push(FileInfo {
@@ -407,7 +406,6 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
         }
     }
 
-    info!("Returning {} files total", all_files.len());
-    info!("=== list_directory_contents END ===");
+    debug!("Returning {} files total", all_files.len());
     Ok(all_files)
 }

@@ -31,51 +31,68 @@
 
 .file-icon {
   font-size: 20px;
+  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .file-item-grid .file-icon {
   font-size: 48px;
   margin-bottom: 8px;
+  margin-right: 0;
 }
 
-.file-item-grid .expand-toggle {
-  display: none;
-}
-
-.expand-toggle {
-  background: none !important;
-  border: none !important;
-  padding: 0 4px !important;
-  margin-right: 4px;
+.file-icon.clickable-folder {
   cursor: pointer;
-  color: var(--text-primary) !important;
-  font-size: 12px;
-  line-height: 1;
   transition: transform 0.2s;
-  min-width: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: monospace !important;
 }
 
-.expand-toggle:hover {
-  color: var(--text-primary);
+.file-icon.clickable-folder:hover {
+  transform: scale(1.1);
 }
 
 .file-name {
-  flex: 1;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: left;
+  min-width: 0; /* Allow flex item to shrink below content size */
+  margin-right: 16px;
 }
 
 .file-size,
 .file-modified {
   color: var(--text-secondary);
   font-size: 14px;
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.file-size {
+  min-width: 80px;
+  margin-right: 16px;
+}
+
+.file-modified {
   min-width: 100px;
+}
+
+/* On small screens, hide other columns to prioritize file name */
+@media (max-width: 768px) {
+  .file-modified {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .file-size {
+    display: none;
+  }
+  
+  .file-name {
+    margin-right: 8px;
+  }
 }
 
 .file-children {

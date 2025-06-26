@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 import './Toolbar.css';
 
 interface ToolbarProps {
@@ -19,45 +18,36 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onRefresh,
   hasSelection
 }) => {
-  const { theme, toggleTheme } = useTheme();
+  const toggleViewMode = () => {
+    onViewModeChange(viewMode === 'list' ? 'grid' : 'list');
+  };
+
   return (
     <div className="toolbar">
       <div className="toolbar-group">
-        <button onClick={onNewFolder} title="New Folder">
-          📁 New Folder
+        <button onClick={onNewFolder} title="New Folder" className="icon-button">
+          📁
         </button>
         <button 
           onClick={onDelete} 
           disabled={!hasSelection}
           title="Delete Selected"
+          className="icon-button"
         >
-          🗑️ Delete
+          🗑️
         </button>
-        <button onClick={onRefresh} title="Refresh">
-          🔄 Refresh
+        <button onClick={onRefresh} title="Refresh" className="icon-button">
+          🔄
         </button>
       </div>
       
       <div className="toolbar-group">
         <button
-          className={viewMode === 'list' ? 'active' : ''}
-          onClick={() => onViewModeChange('list')}
-          title="List View"
+          onClick={toggleViewMode}
+          title={viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'}
+          className="icon-button"
         >
-          ☰
-        </button>
-        <button
-          className={viewMode === 'grid' ? 'active' : ''}
-          onClick={() => onViewModeChange('grid')}
-          title="Grid View"
-        >
-          ⊞
-        </button>
-        <button
-          onClick={toggleTheme}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙' : '☀️'}
+          {viewMode === 'list' ? '⊞' : '☰'}
         </button>
       </div>
     </div>

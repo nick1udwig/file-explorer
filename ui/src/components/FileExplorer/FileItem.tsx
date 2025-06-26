@@ -107,7 +107,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
 
   const getFileIcon = () => {
     if (file.isDirectory) {
-      return '📁';
+      return isExpanded ? '📂' : '📁';
     }
     const ext = file.name.split('.').pop()?.toLowerCase();
     switch (ext) {
@@ -147,12 +147,12 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
         onContextMenu={handleContextMenu}
         style={{ paddingLeft: `${depth * 20 + 10}px` }}
       >
-        {file.isDirectory && viewMode === 'list' && (
-          <button className="expand-toggle" onClick={handleExpandToggle}>
-            {isExpanded ? '▼' : '▶'}
-          </button>
-        )}
-        <span className="file-icon">{getFileIcon()}</span>
+        <span 
+          className={`file-icon ${file.isDirectory && viewMode === 'list' ? 'clickable-folder' : ''}`}
+          onClick={file.isDirectory && viewMode === 'list' ? handleExpandToggle : undefined}
+        >
+          {getFileIcon()}
+        </span>
         <span className="file-name">{file.name}</span>
         {viewMode === 'list' && (
           <>
