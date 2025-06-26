@@ -358,9 +358,11 @@ async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
                 info!("Loading {} sub-entries from '{}'", sub_entries.len(), full_path);
                 
                 for sub_entry in sub_entries {
-                    // The sub_entry.path is relative to the parent directory
-                    let sub_filename = sub_entry.path.clone();
-                    let sub_full_path = format!("{}/{}", full_path.trim_end_matches('/'), sub_entry.path);
+                    // VFS already provides absolute paths in sub_entry.path
+                    let sub_full_path = sub_entry.path.clone();
+                    let sub_filename = sub_entry.path.split('/').last().unwrap_or("").to_string();
+                    
+                    info!("Sub-entry: path='{}', filename='{}', file_type={:?}", sub_full_path, sub_filename, sub_entry.file_type);
                     
                     if sub_entry.file_type == FileType::Directory {
                         all_files.push(FileInfo {

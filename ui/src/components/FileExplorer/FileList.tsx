@@ -29,29 +29,38 @@ const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigat
     fileMap.set(file.path, { ...file, children: [] });
   });
   
-  // Second pass: organize into tree
+  // Second pass: build ALL parent-child relationships first
   files.forEach(file => {
     const fileWithChildren = fileMap.get(file.path)!;
     const parentPath = file.path.substring(0, file.path.lastIndexOf('/'));
+    
+    console.log(`Building tree: file=${file.path}, parentPath=${parentPath}`);
     
     if (fileMap.has(parentPath)) {
       // This file has a parent in our list
       const parent = fileMap.get(parentPath)!;
       if (!parent.children) parent.children = [];
       parent.children.push(fileWithChildren);
+      console.log(`  Added ${file.path} as child of ${parentPath}`);
     } else {
-      // No parent in list - check if it's a direct child of current directory
-      // Handle potential leading slash mismatch between breadcrumb and double-click navigation
-      const normalizedCurrentPath = currentPath.startsWith('/') && currentPath !== '/' 
-        ? currentPath.substring(1) 
-        : currentPath;
-      const expectedParent = normalizedCurrentPath === '/' ? '' : normalizedCurrentPath;
-      
-      if (parentPath === expectedParent) {
-        // This is a direct child of the current directory
-        topLevelFiles.push(fileWithChildren);
-      }
-      // Otherwise, it's a grandchild or deeper that shouldn't be shown at top level
+      console.log(`  No parent found for ${file.path}`);
+    }
+  });
+  
+  // Third pass: determine what goes at the top level
+  // Handle potential leading slash mismatch between breadcrumb and double-click navigation
+  const normalizedCurrentPath = currentPath.startsWith('/') && currentPath !== '/' 
+    ? currentPath.substring(1) 
+    : currentPath;
+  const expectedParent = normalizedCurrentPath === '/' ? '' : normalizedCurrentPath;
+  
+  files.forEach(file => {
+    const fileWithChildren = fileMap.get(file.path)!;
+    const parentPath = file.path.substring(0, file.path.lastIndexOf('/'));
+    
+    // Only add to top level if it's a direct child of current directory and has no parent in the list
+    if (!fileMap.has(parentPath) && parentPath === expectedParent) {
+      topLevelFiles.push(fileWithChildren);
     }
   });
 
@@ -64,13 +73,18 @@ const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigat
     });
   };
 
-  const sortedFiles = sortFiles(topLevelFiles);
-  // Also sort children
-  sortedFiles.forEach(file => {
-    if (file.children) {
-      file.children = sortFiles(file.children);
-    }
-  });
+  // Recursively sort all children
+  const sortRecursive = (files: (FileInfo & { children?: FileInfo[] })[]) => {
+    const sorted = sortFiles(files);
+    sorted.forEach(file => {
+      if (file.children && file.children.length > 0) {
+        file.children = sortRecursive(file.children);
+      }
+    });
+    return sorted;
+  };
+
+  const sortedFiles = sortRecursive(topLevelFiles);
 
   return (
     <div className={`file-list file-list-${viewMode}`}>

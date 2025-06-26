@@ -37,6 +37,11 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
 
   const handleExpandToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('Expand toggle clicked for:', file.path);
+    console.log('Current isExpanded:', isExpanded);
+    console.log('Has children?', hasChildren);
+    console.log('Children:', file.children);
+    console.log('Children length:', file.children?.length);
     setIsExpanded(!isExpanded);
   };
 
@@ -87,11 +92,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
         style={{ paddingLeft: `${depth * 20 + 10}px` }}
       >
         {file.isDirectory && viewMode === 'list' && (
-          <button 
-            className="expand-toggle" 
-            onClick={handleExpandToggle}
-            style={{ visibility: hasChildren ? 'visible' : 'hidden' }}
-          >
+          <button className="expand-toggle" onClick={handleExpandToggle}>
             {isExpanded ? '▼' : '▶'}
           </button>
         )}
@@ -112,6 +113,10 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
       {/* Render children when expanded */}
       {isExpanded && hasChildren && viewMode === 'list' && (
         <div className="file-children">
+          {(() => {
+            console.log('Rendering children for:', file.path, 'Children:', file.children);
+            return null;
+          })()}
           {file.children!.map((child) => (
             <FileItem
               key={child.path}
