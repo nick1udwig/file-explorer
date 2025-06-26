@@ -30,35 +30,20 @@ const FileExplorer: React.FC = () => {
       setError(null);
       const fileList = await listDirectory(path);
       console.log('Received files:', fileList);
+      console.log('Total files received:', fileList.length);
       
-      // Filter to show only files that belong to current directory or immediate subdirectories
+      // Backend returns files for the requested directory with 2 levels of depth
+      // We need to include all files so the tree structure works, but we'll filter
+      // what's shown at the top level in FileList
       const filteredFiles = fileList.filter(file => {
-        // Handle root path special case
-        if (path === '/') {
-          // For root, include files that start with / and have exactly one more segment
-          // or files that are two segments deep (for pre-loading)
-          const segments = file.path.split('/').filter(s => s); // Remove empty segments
-          return segments.length === 1 || segments.length === 2;
-        }
+        if (file.path === path) return false; // Exclude the directory itself
         
-        // For non-root paths, check if file is under current path
-        if (!file.path.startsWith(path)) {
-          return false;
-        }
-        
-        // Get the relative path from current directory
-        const relativePath = file.path.substring(path.length);
-        // Remove leading slash if present
-        const cleanRelative = relativePath.startsWith('/') ? relativePath.substring(1) : relativePath;
-        
-        // Count segments in relative path
-        const segments = cleanRelative.split('/').filter(s => s);
-        
-        // Include if it's a direct child (1 segment) or grandchild (2 segments)
-        return segments.length === 1 || segments.length === 2;
+        // For the tree to work properly, we need to include all files
+        // The FileList component will handle showing only direct children at top level
+        return true;
       });
       
-      console.log('Filtered files:', filteredFiles);
+      console.log(`Setting ${filteredFiles.length} files`);
       setFiles(filteredFiles);
     } catch (err) {
       console.error('Error loading directory:', err);
@@ -149,6 +134,7 @@ const FileExplorer: React.FC = () => {
           viewMode={viewMode}
           loading={loading}
           onNavigate={handleNavigate}
+          currentPath={currentPath}
         />
       </UploadZone>
     </div>

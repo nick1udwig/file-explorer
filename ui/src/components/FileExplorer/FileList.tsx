@@ -8,9 +8,10 @@ interface FileListProps {
   viewMode: 'list' | 'grid';
   loading: boolean;
   onNavigate: (path: string) => void;
+  currentPath: string;
 }
 
-const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigate }) => {
+const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigate, currentPath }) => {
   if (loading) {
     return <div className="file-list-loading">Loading...</div>;
   }
@@ -39,8 +40,18 @@ const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigat
       if (!parent.children) parent.children = [];
       parent.children.push(fileWithChildren);
     } else {
-      // This is a top-level file
-      topLevelFiles.push(fileWithChildren);
+      // No parent in list - check if it's a direct child of current directory
+      // Handle potential leading slash mismatch between breadcrumb and double-click navigation
+      const normalizedCurrentPath = currentPath.startsWith('/') && currentPath !== '/' 
+        ? currentPath.substring(1) 
+        : currentPath;
+      const expectedParent = normalizedCurrentPath === '/' ? '' : normalizedCurrentPath;
+      
+      if (parentPath === expectedParent) {
+        // This is a direct child of the current directory
+        topLevelFiles.push(fileWithChildren);
+      }
+      // Otherwise, it's a grandchild or deeper that shouldn't be shown at top level
     }
   });
 
