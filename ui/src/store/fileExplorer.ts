@@ -5,6 +5,7 @@ interface FileExplorerStore {
   currentPath: string;
   files: FileInfo[];
   selectedFiles: string[];
+  expandedDirectories: Set<string>;
   uploadProgress: Map<string, number>;
   sharedLinks: Map<string, string>;
   loading: boolean;
@@ -18,6 +19,7 @@ interface FileExplorerStore {
   toggleFileSelection: (path: string) => void;
   clearSelection: () => void;
   selectAll: () => void;
+  toggleDirectoryExpanded: (path: string) => void;
   updateUploadProgress: (fileId: string, progress: number) => void;
   addSharedLink: (path: string, link: string) => void;
   setLoading: (loading: boolean) => void;
@@ -28,6 +30,7 @@ const useFileExplorerStore = create<FileExplorerStore>((set, get) => ({
   currentPath: '/',
   files: [],
   selectedFiles: [],
+  expandedDirectories: new Set<string>(),
   uploadProgress: new Map(),
   sharedLinks: new Map(),
   loading: false,
@@ -59,6 +62,16 @@ const useFileExplorerStore = create<FileExplorerStore>((set, get) => ({
   selectAll: () => set((state) => ({
     selectedFiles: state.files.map(f => f.path)
   })),
+  
+  toggleDirectoryExpanded: (path) => set((state) => {
+    const newExpanded = new Set(state.expandedDirectories);
+    if (newExpanded.has(path)) {
+      newExpanded.delete(path);
+    } else {
+      newExpanded.add(path);
+    }
+    return { expandedDirectories: newExpanded };
+  }),
   
   updateUploadProgress: (fileId, progress) => set((state) => {
     const newProgress = new Map(state.uploadProgress);

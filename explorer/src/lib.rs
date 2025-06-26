@@ -1,5 +1,5 @@
 use hyperprocess_macro::hyperprocess;
-use hyperware_app_common::hyperware_process_lib::logging::{init_logging, Level, info, debug};
+use hyperware_app_common::hyperware_process_lib::logging::{init_logging, Level, info, debug, error};
 use hyperware_app_common::hyperware_process_lib::vfs::{self, FileType};
 use std::collections::HashMap;
 
@@ -70,67 +70,8 @@ impl FileExplorerState {
             path.clone()
         };
 
-        // Open directory
-        let dir = vfs::Directory {
-            path: vfs_path,
-            timeout: 5,
-        };
-
-        // Read directory entries
-        let entries = dir.read()
-            .map_err(|e| format!("Failed to read directory: {}", e))?;
-
-        // Convert to FileInfo
-        let mut files = Vec::new();
-        for entry in entries {
-            // Check if entry is a directory
-            if entry.file_type == FileType::Directory {
-                // For directories, create a Directory object and read it
-                let sub_dir = vfs::Directory {
-                    path: format!("/{}", entry.path),
-                    timeout: 5,
-                };
-                
-                // Try to read the directory to get its contents count
-                let dir_size = match sub_dir.read() {
-                    Ok(contents) => contents.len() as u64,
-                    Err(_) => 0, // If we can't read it, assume it's empty or inaccessible
-                };
-                
-                // Extract filename from the path
-                let filename = entry.path.split('/').last().unwrap_or("").to_string();
-                
-                files.push(FileInfo {
-                    name: filename,
-                    path: format!("/{}", entry.path),
-                    size: dir_size, // Number of items in directory
-                    created: 0,
-                    modified: 0,
-                    is_directory: true,
-                    permissions: "rw".to_string(),
-                });
-            } else {
-                // For files, get metadata as before
-                let meta = vfs::metadata(&format!("/{}", entry.path), Some(5))
-                    .map_err(|e| format!("Failed to get metadata for {}: {}", entry.path, e))?;
-                
-                // Extract filename from the path
-                let filename = entry.path.split('/').last().unwrap_or("").to_string();
-                
-                files.push(FileInfo {
-                    name: filename,
-                    path: format!("/{}", entry.path),
-                    size: meta.len,
-                    created: 0,
-                    modified: 0,
-                    is_directory: false,
-                    permissions: "rw".to_string(),
-                });
-            }
-        }
-
-        info!("Returning {} files", files.len());
-        Ok(files)
+        // Just list the current directory - no recursion
+        list_directory_contents(&vfs_path).await
     }
 
     #[http]
@@ -343,4 +284,102 @@ impl FileExplorerState {
         // Create file at destination
         self.create_file(destination, content).await
     }
+}
+
+// Helper function to list directory contents
+async fn list_directory_contents(path: &str) -> Result<Vec<FileInfo>, String> {
+    info!("=== list_directory_contents START ===");
+    info!("Requested path: '{}'", path);
+
+    // Open directory
+    let dir = vfs::Directory {
+        path: path.to_string(),
+        timeout: 5,
+    };
+
+    // Read directory entries
+    let entries = dir.read()
+        .map_err(|e| format!("Failed to read directory '{}': {}", path, e))?;
+
+    info!("VFS returned {} entries for path '{}'", entries.len(), path);
+
+    // Convert to FileInfo
+    let mut files = Vec::new();
+    for (i, entry) in entries.iter().enumerate() {
+        info!("Entry[{}]: path='{}', file_type={:?}", i, entry.path, entry.file_type);
+        
+        // Construct the full path
+        let full_path = if path == "/" {
+            // For root directory, entry.path should be the full path
+            if entry.path.starts_with('/') {
+                entry.path.clone()
+            } else {
+                format!("/{}", entry.path)
+            }
+        } else {
+            // For subdirectories, we need to append the entry to the current path
+            if entry.path.starts_with('/') {
+                // If entry.path is already absolute, use it
+                entry.path.clone()
+            } else {
+                // Otherwise, combine current path with entry name
+                format!("{}/{}", path.trim_end_matches('/'), entry.path)
+            }
+        };
+
+        // Extract filename from the path
+        let filename = entry.path.split('/').last().unwrap_or("").to_string();
+        
+        info!("Constructed: filename='{}', full_path='{}'", filename, full_path);
+
+        if entry.file_type == FileType::Directory {
+            // For directories, try to get the count of items inside
+            info!("Checking subdirectory - entry.path: '{}', full_path: '{}', current_dir: '{}'", entry.path, full_path, path);
+            
+            let sub_dir = vfs::Directory {
+                path: full_path.clone(),
+                timeout: 5,
+            };
+            
+            let dir_size = match sub_dir.read() {
+                Ok(contents) => {
+                    let count = contents.len() as u64;
+                    info!("Successfully read subdirectory '{}', found {} items", full_path, count);
+                    count
+                },
+                Err(e) => {
+                    error!("Failed to read subdirectory '{}': {}", full_path, e);
+                    0
+                }
+            };
+
+            files.push(FileInfo {
+                name: filename,
+                path: full_path,
+                size: dir_size,
+                created: 0,
+                modified: 0,
+                is_directory: true,
+                permissions: "rw".to_string(),
+            });
+        } else {
+            // For files, get metadata
+            let meta = vfs::metadata(&full_path, Some(5))
+                .map_err(|e| format!("Failed to get metadata for '{}': {}", entry.path, e))?;
+
+            files.push(FileInfo {
+                name: filename,
+                path: full_path,
+                size: meta.len,
+                created: 0,
+                modified: 0,
+                is_directory: false,
+                permissions: "rw".to_string(),
+            });
+        }
+    }
+
+    info!("Returning {} files", files.len());
+    info!("=== list_directory_contents END ===");
+    Ok(files)
 }

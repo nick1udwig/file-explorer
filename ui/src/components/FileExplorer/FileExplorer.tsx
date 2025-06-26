@@ -24,13 +24,15 @@ const FileExplorer: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const loadDirectory = async (path: string) => {
+    console.log('Loading directory:', path);
     try {
       setLoading(true);
       setError(null);
       const fileList = await listDirectory(path);
+      console.log('Received files:', fileList);
       setFiles(fileList);
-      setCurrentPath(path);
     } catch (err) {
+      console.error('Error loading directory:', err);
       setError(err instanceof Error ? err.message : 'Failed to load directory');
     } finally {
       setLoading(false);
@@ -39,11 +41,11 @@ const FileExplorer: React.FC = () => {
 
   useEffect(() => {
     loadDirectory(currentPath);
-  }, []);
+  }, [currentPath]);
 
   const handleNavigate = (path: string) => {
     clearSelection();
-    loadDirectory(path);
+    setCurrentPath(path);
   };
 
   const handleCreateFolder = async () => {

@@ -19,17 +19,24 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate }) => {
 
   const isSelected = selectedFiles.includes(file.path);
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleClick = (e: React.MouseEvent) => {
     if (e.ctrlKey || e.metaKey) {
       toggleFileSelection(file.path);
-    } else if (file.isDirectory) {
-      // Single click navigates for directories
+    } else if (e.detail === 2 && file.isDirectory) {
+      // Double click navigates into directories
+      console.log('Double-click on directory:', file.path);
       onNavigate(file.path);
-    } else if (e.detail === 2) {
-      // Double click opens files (future feature)
-      // For now, just select the file
+    } else if (!file.isDirectory) {
+      // Single click selects files
       toggleFileSelection(file.path);
     }
+  };
+
+  const handleExpandToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -75,12 +82,17 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate }) => {
         onClick={handleClick}
         onContextMenu={handleContextMenu}
       >
+        {file.isDirectory && viewMode === 'list' && (
+          <button className="expand-toggle" onClick={handleExpandToggle}>
+            {isExpanded ? '▼' : '▶'}
+          </button>
+        )}
         <span className="file-icon">{getFileIcon()}</span>
         <span className="file-name">{file.name}</span>
         {viewMode === 'list' && (
           <>
             <span className="file-size">
-              {file.isDirectory ? '-' : formatFileSize(file.size)}
+              {file.isDirectory ? `${file.size} items` : formatFileSize(file.size)}
             </span>
             <span className="file-modified">
               {file.modified ? new Date(file.modified * 1000).toLocaleDateString() : '-'}
