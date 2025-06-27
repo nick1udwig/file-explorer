@@ -156,6 +156,9 @@ const FileExplorer: React.FC = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.multiple = true;
+    // Enable folder selection
+    fileInput.webkitdirectory = true;
+    (fileInput as any).directory = true;
     
     fileInput.onchange = async (e) => {
       const target = e.target as HTMLInputElement;

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { uploadFile } from '../../types/api';
+import { uploadFile, createDirectory } from '../../types/api';
 import useFileExplorerStore from '../../store/fileExplorer';
 import './UploadZone.css';
 
@@ -58,9 +58,65 @@ const UploadZone: React.FC<UploadZoneProps> = ({ currentPath, onUploadComplete, 
     setIsDragging(false);
     dragCounter.current = 0;
 
-    const files = Array.from(e.dataTransfer.files);
-    for (const file of files) {
-      await handleFileUpload(file);
+    // Handle both files and folders
+    const items = e.dataTransfer.items;
+    if (items) {
+      // Use DataTransferItemList interface when available
+      const files: File[] = [];
+      
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file') {
+          const entry = item.webkitGetAsEntry?.();
+          if (entry) {
+            await processEntry(entry, '', files);
+          } else {
+            // Fallback to getAsFile for browsers that don't support webkitGetAsEntry
+            const file = item.getAsFile();
+            if (file) files.push(file);
+          }
+        }
+      }
+      
+      // Upload all collected files
+      for (const file of files) {
+        await handleFileUpload(file);
+      }
+    } else {
+      // Fallback for browsers that don't support DataTransferItemList
+      const files = Array.from(e.dataTransfer.files);
+      for (const file of files) {
+        await handleFileUpload(file);
+      }
+    }
+  };
+
+  // Recursively process file system entries (for folder support)
+  const processEntry = async (entry: any, path: string, files: File[]): Promise<void> => {
+    if (entry.isFile) {
+      // Handle file
+      return new Promise((resolve) => {
+        entry.file((file: File) => {
+          // Add the relative path to the file object
+          Object.defineProperty(file, 'webkitRelativePath', {
+            value: path + file.name,
+            writable: false
+          });
+          files.push(file);
+          resolve();
+        });
+      });
+    } else if (entry.isDirectory) {
+      // Handle directory
+      const dirReader = entry.createReader();
+      return new Promise((resolve) => {
+        dirReader.readEntries(async (entries: any[]) => {
+          for (const childEntry of entries) {
+            await processEntry(childEntry, path + entry.name + '/', files);
+          }
+          resolve();
+        });
+      });
     }
   };
 
@@ -73,10 +129,32 @@ const UploadZone: React.FC<UploadZoneProps> = ({ currentPath, onUploadComplete, 
       const content = await file.arrayBuffer();
       const contentArray = Array.from(new Uint8Array(content));
       
+      // Check if file is part of a folder upload
+      const relativePath = (file as any).webkitRelativePath || '';
+      let uploadPath = currentPath;
+      let fileName = file.name;
+      
+      if (relativePath) {
+        // Handle folder structure
+        const pathParts = relativePath.split('/');
+        fileName = pathParts.pop() || file.name;
+        
+        // Create nested folder structure
+        for (const folderName of pathParts) {
+          uploadPath = uploadPath === '/' ? `/${folderName}` : `${uploadPath}/${folderName}`;
+          try {
+            await createDirectory(uploadPath);
+          } catch (err) {
+            // Ignore if directory already exists
+            console.log(`Directory ${uploadPath} might already exist`);
+          }
+        }
+      }
+      
       // Simulate upload progress
       updateUploadProgress(fileId, 50);
       
-      await uploadFile(currentPath, file.name, contentArray);
+      await uploadFile(uploadPath, fileName, contentArray);
       
       updateUploadProgress(fileId, 100);
       onUploadComplete();
@@ -98,7 +176,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ currentPath, onUploadComplete, 
       {isDragging && (
         <div className="upload-overlay">
           <div className="upload-message">
-            Drop files here to upload
+            Drop files or folders here to upload
           </div>
         </div>
       )}
