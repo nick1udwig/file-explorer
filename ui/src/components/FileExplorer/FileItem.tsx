@@ -14,12 +14,13 @@ interface FileItemProps {
 }
 
 const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth = 0, onLoadSubdirectory }) => {
-  const { selectedFiles, toggleFileSelection } = useFileExplorerStore();
+  const { selectedFiles, toggleFileSelection, isFileShared } = useFileExplorerStore();
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const isSelected = selectedFiles.includes(file.path);
+  const isShared = !file.isDirectory && isFileShared(file.path);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [childrenLoaded, setChildrenLoaded] = useState(false);
@@ -154,6 +155,11 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
           {getFileIcon()}
         </span>
         <span className="file-name">{file.name}</span>
+        {isShared && (
+          <span className="shared-indicator" title="This file is shared">
+            🔗
+          </span>
+        )}
         {viewMode === 'list' && (
           <>
             <span className="file-size">

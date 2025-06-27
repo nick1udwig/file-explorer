@@ -14,12 +14,14 @@
   },
   "dependencies": {
     "@hyperware-ai/client-api": "^0.1.0",
+    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.14.0",

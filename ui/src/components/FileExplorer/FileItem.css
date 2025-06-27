@@ -98,3 +98,15 @@
 .file-children {
   /* Nested files container */
 }
+
+.shared-indicator {
+  font-size: 16px;
+  margin-left: 8px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  cursor: help;
+}
+
+.file-item:hover .shared-indicator {
+  opacity: 1;
+}

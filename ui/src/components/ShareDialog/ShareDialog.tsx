@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileInfo, AuthScheme, shareFile } from '../../types/api';
 import useFileExplorerStore from '../../store/fileExplorer';
+import QRCode from 'qrcode';
 import './ShareDialog.css';
 
 interface ShareDialogProps {
@@ -12,7 +13,15 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ file, onClose }) => {
   const [authScheme, setAuthScheme] = useState<AuthScheme>("Public");
   const [shareLink, setShareLink] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [qrCode, setQrCode] = useState<string>('');
+  const [showQR, setShowQR] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { addSharedLink } = useFileExplorerStore();
+
+  // Auto-generate share link on mount
+  useEffect(() => {
+    handleShare();
+  }, []);
 
   const handleShare = async () => {
     setLoading(true);
@@ -21,6 +30,14 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ file, onClose }) => {
       const fullLink = `${window.location.origin}${link}`;
       setShareLink(fullLink);
       addSharedLink(file.path, fullLink);
+      
+      // Auto-copy to clipboard
+      await navigator.clipboard.writeText(fullLink);
+      setCopied(true);
+      
+      // Generate QR code
+      const qrDataUrl = await QRCode.toDataURL(fullLink);
+      setQrCode(qrDataUrl);
     } catch (err) {
       console.error('Failed to share file:', err);
     } finally {
@@ -28,9 +45,10 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ file, onClose }) => {
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareLink);
-    alert('Link copied to clipboard!');
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -38,49 +56,45 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ file, onClose }) => {
       <div className="share-dialog" onClick={e => e.stopPropagation()}>
         <h3>Share File: {file.name}</h3>
         
-        <div className="share-options">
-          <label>
-            <input
-              type="radio"
-              name="authScheme"
-              value="public"
-              checked={authScheme === "Public"}
-              onChange={() => setAuthScheme("Public")}
-            />
-            Public (Anyone with link can access)
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="authScheme"
-              value="private"
-              checked={authScheme === "Private"}
-              onChange={() => setAuthScheme("Private")}
-            />
-            Private (Restricted access)
-          </label>
-        </div>
-
-        {!shareLink && (
-          <button 
-            onClick={handleShare} 
-            disabled={loading}
-            className="share-button"
-          >
-            {loading ? 'Generating...' : 'Generate Share Link'}
-          </button>
-        )}
-
-        {shareLink && (
-          <div className="share-link-container">
-            <input
-              type="text"
-              value={shareLink}
-              readOnly
-              className="share-link-input"
-            />
-            <button onClick={copyToClipboard}>Copy</button>
+        {loading ? (
+          <div className="loading-container">
+            <p>Generating share link...</p>
           </div>
+        ) : shareLink ? (
+          <>
+            <div className="share-success-message">
+              <p>✓ Share link created and copied to clipboard!</p>
+            </div>
+
+            <div className="share-link-container">
+              <input
+                type="text"
+                value={shareLink}
+                readOnly
+                className="share-link-input"
+              />
+              <button onClick={copyToClipboard}>
+                {copied ? '✓ Copied' : 'Copy'}
+              </button>
+            </div>
+
+            <div className="qr-container">
+              <button 
+                onClick={() => setShowQR(!showQR)}
+                className="qr-toggle-button"
+              >
+                {showQR ? 'Hide QR Code' : 'Show QR Code'}
+              </button>
+              
+              {showQR && qrCode && (
+                <div className="qr-code">
+                  <img src={qrCode} alt="QR Code" />
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <p>Failed to generate share link</p>
         )}
 
         <div className="dialog-actions">

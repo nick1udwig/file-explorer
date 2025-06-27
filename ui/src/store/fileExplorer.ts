@@ -22,6 +22,8 @@ interface FileExplorerStore {
   toggleDirectoryExpanded: (path: string) => void;
   updateUploadProgress: (fileId: string, progress: number) => void;
   addSharedLink: (path: string, link: string) => void;
+  removeSharedLink: (path: string) => void;
+  isFileShared: (path: string) => boolean;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 }
@@ -88,6 +90,17 @@ const useFileExplorerStore = create<FileExplorerStore>((set, get) => ({
     newLinks.set(path, link);
     return { sharedLinks: newLinks };
   }),
+  
+  removeSharedLink: (path) => set((state) => {
+    const newLinks = new Map(state.sharedLinks);
+    newLinks.delete(path);
+    return { sharedLinks: newLinks };
+  }),
+  
+  isFileShared: (path) => {
+    const state = get();
+    return state.sharedLinks.has(path);
+  },
   
   setLoading: (loading) => set({ loading }),
   

@@ -248,6 +248,34 @@ impl FileExplorerState {
                 if format!("{:x}", md5::compute(path)) == share_id {
                     match auth_scheme {
                         AuthScheme::Public => {
+                            // Extract filename from path
+                            let filename = path.split('/').last().unwrap_or("download");
+                            
+                            // Set Content-Disposition header to preserve original filename
+                            hyperware_app_common::add_response_header(
+                                "Content-Disposition".to_string(),
+                                format!("attachment; filename=\"{}\"", filename)
+                            );
+                            
+                            // Set appropriate Content-Type based on file extension
+                            let content_type = match filename.split('.').last() {
+                                Some("txt") => "text/plain",
+                                Some("html") | Some("htm") => "text/html",
+                                Some("css") => "text/css",
+                                Some("js") => "application/javascript",
+                                Some("json") => "application/json",
+                                Some("png") => "image/png",
+                                Some("jpg") | Some("jpeg") => "image/jpeg",
+                                Some("gif") => "image/gif",
+                                Some("pdf") => "application/pdf",
+                                Some("zip") => "application/zip",
+                                _ => "application/octet-stream"
+                            };
+                            hyperware_app_common::add_response_header(
+                                "Content-Type".to_string(),
+                                content_type.to_string()
+                            );
+                            
                             // Read and return file content
                             return self.read_file(path.clone()).await;
                         },

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { FileInfo } from '../../types/api';
+import { FileInfo, unshareFile } from '../../types/api';
+import useFileExplorerStore from '../../store/fileExplorer';
 import './ContextMenu.css';
 
 interface ContextMenuProps {
@@ -11,6 +12,8 @@ interface ContextMenuProps {
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ position, file, onClose, onShare }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const { isFileShared, removeSharedLink } = useFileExplorerStore();
+  const isShared = !file.isDirectory && isFileShared(file.path);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -22,6 +25,16 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ position, file, onClose, onSh
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
+
+  const handleUnshare = async () => {
+    try {
+      await unshareFile(file.path);
+      removeSharedLink(file.path);
+      onClose();
+    } catch (err) {
+      console.error('Failed to unshare file:', err);
+    }
+  };
 
   return (
     <div
@@ -39,9 +52,15 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ position, file, onClose, onSh
         📄 Rename
       </button>
       {!file.isDirectory && (
-        <button onClick={onShare}>
-          🔗 Share
-        </button>
+        isShared ? (
+          <button onClick={handleUnshare}>
+            🔓 Unshare
+          </button>
+        ) : (
+          <button onClick={onShare}>
+            🔗 Share
+          </button>
+        )
       )}
       <hr />
       <button onClick={() => { /* TODO */ onClose(); }}>

@@ -99,3 +99,46 @@
 .dialog-actions button:hover {
   background-color: var(--bg-hover);
 }
+
+.loading-container {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.share-success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.qr-container {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.qr-toggle-button {
+  padding: 8px 16px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.qr-toggle-button:hover {
+  background-color: var(--bg-hover);
+}
+
+.qr-code {
+  margin-top: 16px;
+}
+
+.qr-code img {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  max-width: 200px;
+}
