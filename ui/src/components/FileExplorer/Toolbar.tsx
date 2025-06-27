@@ -5,18 +5,16 @@ interface ToolbarProps {
   viewMode: 'list' | 'grid';
   onViewModeChange: (mode: 'list' | 'grid') => void;
   onNewFolder: () => void;
-  onDelete: () => void;
   onRefresh: () => void;
-  hasSelection: boolean;
+  onUpload: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
   viewMode,
   onViewModeChange,
   onNewFolder,
-  onDelete,
   onRefresh,
-  hasSelection
+  onUpload
 }) => {
   const toggleViewMode = () => {
     onViewModeChange(viewMode === 'list' ? 'grid' : 'list');
@@ -28,13 +26,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <button onClick={onNewFolder} title="New Folder" className="icon-button">
           📁
         </button>
-        <button 
-          onClick={onDelete} 
-          disabled={!hasSelection}
-          title="Delete Selected"
-          className="icon-button"
-        >
-          🗑️
+        <button onClick={onUpload} title="Upload File" className="icon-button">
+          📤
         </button>
         <button onClick={onRefresh} title="Refresh" className="icon-button">
           🔄

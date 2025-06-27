@@ -1,8 +1,10 @@
 .file-list {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
   background-color: var(--bg-primary);
+  min-height: 0; /* Important for flex children with overflow */
 }
 
 .file-list-loading,

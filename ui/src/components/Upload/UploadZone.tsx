@@ -14,6 +14,21 @@ const UploadZone: React.FC<UploadZoneProps> = ({ currentPath, onUploadComplete, 
   const { updateUploadProgress, setError } = useFileExplorerStore();
   const dragCounter = useRef(0);
 
+  // Listen for upload events from the toolbar
+  React.useEffect(() => {
+    const handleUploadEvent = async (e: CustomEvent) => {
+      const files = e.detail.files as File[];
+      for (const file of files) {
+        await handleFileUpload(file);
+      }
+    };
+
+    window.addEventListener('upload-files', handleUploadEvent as EventListener);
+    return () => {
+      window.removeEventListener('upload-files', handleUploadEvent as EventListener);
+    };
+  }, [currentPath, onUploadComplete]);
+
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();

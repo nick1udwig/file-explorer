@@ -4,6 +4,7 @@
   padding: 8px 16px;
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .toolbar-group {

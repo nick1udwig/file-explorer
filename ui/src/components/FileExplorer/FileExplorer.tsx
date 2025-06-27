@@ -134,15 +134,36 @@ const FileExplorer: React.FC = () => {
     loadDirectory(currentPath);
   };
 
+  const handleUpload = () => {
+    // Create a hidden file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    
+    fileInput.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      const files = target.files;
+      if (!files || files.length === 0) return;
+      
+      // Trigger the upload process for each file
+      const event = new CustomEvent('upload-files', { 
+        detail: { files: Array.from(files) } 
+      });
+      window.dispatchEvent(event);
+    };
+    
+    // Trigger the file dialog
+    fileInput.click();
+  };
+
   return (
     <div className="file-explorer">
       <Toolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onNewFolder={handleCreateFolder}
-        onDelete={handleDelete}
         onRefresh={handleRefresh}
-        hasSelection={selectedFiles.length > 0}
+        onUpload={handleUpload}
       />
       
       <Breadcrumb 

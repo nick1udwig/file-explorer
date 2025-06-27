@@ -8,9 +8,18 @@ interface BreadcrumbProps {
 
 const Breadcrumb: React.FC<BreadcrumbProps> = ({ currentPath, onNavigate }) => {
   const pathParts = currentPath.split('/').filter(Boolean);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  
+  // Scroll to the end when path changes
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, [currentPath]);
   
   return (
-    <div className="breadcrumb">
+    <div className="breadcrumb-container">
+      <div className="breadcrumb" ref={scrollRef}>
       <button 
         className="breadcrumb-item"
         onClick={() => onNavigate('/')}
@@ -32,6 +41,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ currentPath, onNavigate }) => {
           </React.Fragment>
         );
       })}
+      </div>
     </div>
   );
 };

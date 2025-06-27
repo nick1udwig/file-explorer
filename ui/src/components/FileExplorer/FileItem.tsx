@@ -29,13 +29,11 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
   const handleClick = (e: React.MouseEvent) => {
     if (e.ctrlKey || e.metaKey) {
       toggleFileSelection(file.path);
-    } else if (e.detail === 2 && file.isDirectory) {
-      // Double click navigates into directories
+    } else if (file.isDirectory) {
+      // Single click navigates into directories
       onNavigate(file.path);
-    } else if (!file.isDirectory) {
-      // Single click selects files
-      toggleFileSelection(file.path);
     }
+    // Remove file selection on single click - no action for files
   };
 
   const buildTreeFromFlatList = (flatList: FileInfo[], parentPath: string): (FileInfo & { children?: FileInfo[] })[] => {

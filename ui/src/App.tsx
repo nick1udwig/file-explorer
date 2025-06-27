@@ -48,9 +48,6 @@ function App() {
   return (
     <ThemeProvider>
       <div style={{ width: "100%", height: "100vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ position: "absolute", top: 4, left: 8, zIndex: 1000 }}>
-          ID: <strong>{window.our?.node}</strong>
-        </div>
         {!nodeConnected && (
           <div className="node-not-connected">
             <h2 style={{ color: "red" }}>Node not connected</h2>
