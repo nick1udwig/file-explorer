@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FileInfo, unshareFile, deleteFile, deleteDirectory } from '../../types/api';
+import { FileInfo, unshareFile, deleteFile, deleteDirectory } from '../../lib/api';
 import useFileExplorerStore from '../../store/fileExplorer';
 import './ContextMenu.css';
 

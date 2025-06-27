@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileInfo, AuthScheme, shareFile } from '../../types/api';
+import { FileInfo, AuthScheme, shareFile } from '../../lib/api';
 import useFileExplorerStore from '../../store/fileExplorer';
 import QRCode from 'qrcode';
 import './ShareDialog.css';

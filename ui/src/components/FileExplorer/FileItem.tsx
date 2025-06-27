@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileInfo, deleteFile, deleteDirectory } from '../../types/api';
+import { FileInfo, deleteFile, deleteDirectory } from '../../lib/api';
 import useFileExplorerStore from '../../store/fileExplorer';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import ShareDialog from '../ShareDialog/ShareDialog';

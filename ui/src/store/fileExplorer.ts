@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FileInfo } from '../types/api';
+import { FileInfo } from '../lib/api';
 
 interface FileExplorerStore {
   currentPath: string;

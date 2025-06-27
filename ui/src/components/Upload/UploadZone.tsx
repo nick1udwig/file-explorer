@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { uploadFile, createDirectory } from '../../types/api';
+import { uploadFile, createDirectory } from '../../lib/api';
 import useFileExplorerStore from '../../store/fileExplorer';
 import './UploadZone.css';
 

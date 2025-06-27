@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileInfo } from '../../types/api';
+import { FileInfo } from '../../lib/api';
 import FileItem from './FileItem';
 import './FileList.css';
 

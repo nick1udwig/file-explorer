@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import useFileExplorerStore from '../../store/fileExplorer';
-import { listDirectory, createDirectory, createFile, deleteFile, deleteDirectory, FileInfo, getCurrentDirectory } from '../../types/api';
+import { listDirectory, createDirectory, createFile, deleteFile, deleteDirectory, FileInfo, getCurrentDirectory } from '../../lib/api';
 import FileList from './FileList';
 import Breadcrumb from './Breadcrumb';
 import Toolbar from './Toolbar';
