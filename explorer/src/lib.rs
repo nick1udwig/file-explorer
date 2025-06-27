@@ -1,6 +1,7 @@
 use hyperprocess_macro::hyperprocess;
 use hyperware_app_common::hyperware_process_lib::logging::{init_logging, Level, info, debug, error};
-use hyperware_app_common::hyperware_process_lib::vfs::{self, FileType};
+use hyperware_app_common::hyperware_process_lib::vfs::{self, FileType, create_drive};
+use hyperware_app_common::hyperware_process_lib::our;
 use std::collections::HashMap;
 
 const PROCESS_ID_LINK: &str = "explorer:file-explorer:sys";
@@ -55,7 +56,19 @@ impl FileExplorerState {
     #[init]
     async fn init(&mut self) {
         init_logging(Level::DEBUG, Level::INFO, None, None, None).unwrap();
-        self.cwd = "/".to_string();
+        
+        // Create home drive for the user
+        let package_id = our().package_id();
+        match create_drive(package_id.clone(), "home", Some(5)) {
+            Ok(home_path) => {
+                info!("Created home drive at: {}", home_path);
+                self.cwd = home_path;
+            }
+            Err(e) => {
+                error!("Failed to create home drive: {:?}. Using root as default.", e);
+                self.cwd = "/".to_string();
+            }
+        }
 
         hyperware_process_lib::homepage::add_to_homepage("File Explorer", None, Some(""), None);
         //hyperware_process_lib::homepage::add_to_homepage("File Explorer", Some(ICON), Some(""), None);
@@ -255,6 +268,7 @@ impl FileExplorerState {
 
     #[http]
     async fn get_current_directory(&mut self) -> Result<String, String> {
+        info!("get_current_directory called, returning: {}", self.cwd);
         Ok(self.cwd.clone())
     }
 

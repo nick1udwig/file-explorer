@@ -27,7 +27,7 @@ interface FileExplorerStore {
 }
 
 const useFileExplorerStore = create<FileExplorerStore>((set, get) => ({
-  currentPath: '/',
+  currentPath: '', // Start with empty path to avoid loading root before home is set
   files: [],
   selectedFiles: [],
   expandedDirectories: new Set<string>(),

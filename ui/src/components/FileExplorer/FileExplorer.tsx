@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import useFileExplorerStore from '../../store/fileExplorer';
-import { listDirectory, createDirectory, deleteFile, deleteDirectory, FileInfo } from '../../types/api';
+import { listDirectory, createDirectory, deleteFile, deleteDirectory, FileInfo, getCurrentDirectory } from '../../types/api';
 import FileList from './FileList';
 import Breadcrumb from './Breadcrumb';
 import Toolbar from './Toolbar';
@@ -65,8 +65,27 @@ const FileExplorer: React.FC = () => {
     }
   };
 
+  // Initialize with home directory on first load
   useEffect(() => {
-    loadDirectory(currentPath);
+    const initializeDirectory = async () => {
+      try {
+        const cwd = await getCurrentDirectory();
+        setCurrentPath(cwd);
+      } catch (err) {
+        // If getting cwd fails, fall back to root
+        console.error('Failed to get current directory:', err);
+        setCurrentPath('/');
+      }
+    };
+    
+    initializeDirectory();
+  }, []);
+
+  // Load directory whenever path changes
+  useEffect(() => {
+    if (currentPath) {
+      loadDirectory(currentPath);
+    }
   }, [currentPath]);
 
   const handleNavigate = (path: string) => {
