@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileInfo } from '../../types/api';
+import { FileInfo, deleteFile, deleteDirectory } from '../../types/api';
 import useFileExplorerStore from '../../store/fileExplorer';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import ShareDialog from '../ShareDialog/ShareDialog';
@@ -11,9 +11,10 @@ interface FileItemProps {
   onNavigate: (path: string) => void;
   depth?: number;
   onLoadSubdirectory?: (path: string) => Promise<FileInfo[]>;
+  onDelete?: () => void;
 }
 
-const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth = 0, onLoadSubdirectory }) => {
+const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth = 0, onLoadSubdirectory, onDelete }) => {
   const { selectedFiles, toggleFileSelection, isFileShared } = useFileExplorerStore();
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -104,6 +105,25 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
     setContextMenuOpen(true);
   };
 
+  const handleDelete = async () => {
+    if (!confirm(`Delete ${file.name}?`)) return;
+    
+    try {
+      if (file.isDirectory) {
+        await deleteDirectory(file.path);
+      } else {
+        await deleteFile(file.path);
+      }
+      // Call the parent's onDelete callback to refresh the list
+      if (onDelete) {
+        onDelete();
+      }
+    } catch (err) {
+      console.error('Failed to delete:', err);
+      alert(`Failed to delete ${file.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
   const getFileIcon = () => {
     if (file.isDirectory) {
       return isExpanded ? '📂' : '📁';
@@ -181,6 +201,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
               onNavigate={onNavigate}
               depth={depth + 1}
               onLoadSubdirectory={onLoadSubdirectory}
+              onDelete={onDelete}
             />
           ))}
         </div>
@@ -195,6 +216,7 @@ const FileItem: React.FC<FileItemProps> = ({ file, viewMode, onNavigate, depth =
             setShareDialogOpen(true);
             setContextMenuOpen(false);
           }}
+          onDelete={handleDelete}
         />
       )}
 

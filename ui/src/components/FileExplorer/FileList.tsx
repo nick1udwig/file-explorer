@@ -10,9 +10,10 @@ interface FileListProps {
   onNavigate: (path: string) => void;
   currentPath: string;
   onLoadSubdirectory?: (path: string) => Promise<FileInfo[]>;
+  onDelete?: () => void;
 }
 
-const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigate, currentPath, onLoadSubdirectory }) => {
+const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigate, currentPath, onLoadSubdirectory, onDelete }) => {
   if (loading) {
     return <div className="file-list-loading">Loading...</div>;
   }
@@ -93,6 +94,7 @@ const FileList: React.FC<FileListProps> = ({ files, viewMode, loading, onNavigat
           onNavigate={onNavigate}
           depth={0}
           onLoadSubdirectory={onLoadSubdirectory}
+          onDelete={onDelete}
         />
       ))}
     </div>

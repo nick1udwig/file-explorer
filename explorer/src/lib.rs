@@ -1,7 +1,8 @@
 use hyperprocess_macro::hyperprocess;
 use hyperware_app_common::hyperware_process_lib::logging::{init_logging, Level, info, debug, error};
-use hyperware_app_common::hyperware_process_lib::vfs::{self, FileType, create_drive};
+use hyperware_app_common::hyperware_process_lib::vfs::{self, FileType, create_drive, vfs_request, VfsAction, VfsResponse};
 use hyperware_app_common::hyperware_process_lib::our;
+use hyperware_app_common::send;
 use std::collections::HashMap;
 
 const PROCESS_ID_LINK: &str = "explorer:file-explorer:sys";
@@ -194,11 +195,21 @@ impl FileExplorerState {
         info!("delete_directory called with path: {}", path);
 
         let vfs_path = path.clone();
+        let timeout = 5;
 
-        vfs::remove_dir(&vfs_path, Some(5))
-            .map_err(|e| format!("Failed to delete directory: {}", e))?;
+        // Create a VFS request with RemoveDirAll action to handle non-empty directories
+        let request = vfs_request(&vfs_path, VfsAction::RemoveDirAll)
+            .expects_response(timeout);
 
-        Ok(true)
+        // Send the request and await response
+        let response: Result<VfsResponse, _> = send(request).await;
+        
+        match response {
+            Ok(VfsResponse::Ok) => Ok(true),
+            Ok(VfsResponse::Err(e)) => Err(format!("Failed to delete directory: {:?}", e)),
+            Ok(_) => Err("Unexpected response from VFS".to_string()),
+            Err(e) => Err(format!("Failed to send VFS request: {}", e)),
+        }
     }
 
     #[http]

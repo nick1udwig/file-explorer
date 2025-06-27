@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FileInfo, unshareFile } from '../../types/api';
+import { FileInfo, unshareFile, deleteFile, deleteDirectory } from '../../types/api';
 import useFileExplorerStore from '../../store/fileExplorer';
 import './ContextMenu.css';
 
@@ -8,9 +8,10 @@ interface ContextMenuProps {
   file: FileInfo;
   onClose: () => void;
   onShare: () => void;
+  onDelete: () => void;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ position, file, onClose, onShare }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({ position, file, onClose, onShare, onDelete }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const { isFileShared, removeSharedLink } = useFileExplorerStore();
   const isShared = !file.isDirectory && isFileShared(file.path);
@@ -63,7 +64,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ position, file, onClose, onSh
         )
       )}
       <hr />
-      <button onClick={() => { /* TODO */ onClose(); }}>
+      <button onClick={() => { onDelete(); onClose(); }}>
         🗑️ Delete
       </button>
     </div>

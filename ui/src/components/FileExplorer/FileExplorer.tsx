@@ -209,6 +209,7 @@ const FileExplorer: React.FC = () => {
           onNavigate={handleNavigate}
           currentPath={currentPath}
           onLoadSubdirectory={loadSubdirectory}
+          onDelete={() => loadDirectory(currentPath)}
         />
       </UploadZone>
     </div>
