@@ -14,7 +14,6 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ file, onClose }) => {
   const [shareLink, setShareLink] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState<string>('');
-  const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
   const { addSharedLink } = useFileExplorerStore();
 
@@ -78,20 +77,13 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ file, onClose }) => {
               </button>
             </div>
 
-            <div className="qr-container">
-              <button 
-                onClick={() => setShowQR(!showQR)}
-                className="qr-toggle-button"
-              >
-                {showQR ? 'Hide QR Code' : 'Show QR Code'}
-              </button>
-              
-              {showQR && qrCode && (
+            {qrCode && (
+              <div className="qr-container">
                 <div className="qr-code">
                   <img src={qrCode} alt="QR Code" />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </>
         ) : (
           <p>Failed to generate share link</p>
