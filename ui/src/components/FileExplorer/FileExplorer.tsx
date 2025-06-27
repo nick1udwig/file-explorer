@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import useFileExplorerStore from '../../store/fileExplorer';
-import { listDirectory, createDirectory, deleteFile, deleteDirectory, FileInfo, getCurrentDirectory } from '../../types/api';
+import { listDirectory, createDirectory, createFile, deleteFile, deleteDirectory, FileInfo, getCurrentDirectory } from '../../types/api';
 import FileList from './FileList';
 import Breadcrumb from './Breadcrumb';
 import Toolbar from './Toolbar';
@@ -109,6 +109,23 @@ const FileExplorer: React.FC = () => {
     }
   };
 
+  const handleCreateFile = async () => {
+    const fileName = prompt('Enter file name:');
+    if (!fileName) return;
+
+    const newPath = currentPath === '/' 
+      ? `/${fileName}`
+      : `${currentPath}/${fileName}`;
+
+    try {
+      // Create an empty file
+      await createFile(newPath, []);
+      await loadDirectory(currentPath);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create file');
+    }
+  };
+
   const handleDelete = async () => {
     if (selectedFiles.length === 0) return;
     
@@ -162,6 +179,7 @@ const FileExplorer: React.FC = () => {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onNewFolder={handleCreateFolder}
+        onNewFile={handleCreateFile}
         onRefresh={handleRefresh}
         onUpload={handleUpload}
       />

@@ -5,6 +5,7 @@ interface ToolbarProps {
   viewMode: 'list' | 'grid';
   onViewModeChange: (mode: 'list' | 'grid') => void;
   onNewFolder: () => void;
+  onNewFile: () => void;
   onRefresh: () => void;
   onUpload: () => void;
 }
@@ -13,6 +14,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   viewMode,
   onViewModeChange,
   onNewFolder,
+  onNewFile,
   onRefresh,
   onUpload
 }) => {
@@ -25,6 +27,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className="toolbar-group">
         <button onClick={onNewFolder} title="New Folder" className="icon-button">
           📁
+        </button>
+        <button onClick={onNewFile} title="New File" className="icon-button">
+          📄
         </button>
         <button onClick={onUpload} title="Upload File" className="icon-button">
           📤
