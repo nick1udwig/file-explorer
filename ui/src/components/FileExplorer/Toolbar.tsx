@@ -4,19 +4,19 @@ import './Toolbar.css';
 interface ToolbarProps {
   viewMode: 'list' | 'grid';
   onViewModeChange: (mode: 'list' | 'grid') => void;
-  onNewFolder: () => void;
-  onNewFile: () => void;
+  onNewMenu: () => void;
+  onUploadFiles: () => void;
+  onUploadFolder: () => void;
   onRefresh: () => void;
-  onUpload: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
   viewMode,
   onViewModeChange,
-  onNewFolder,
-  onNewFile,
-  onRefresh,
-  onUpload
+  onNewMenu,
+  onUploadFiles,
+  onUploadFolder,
+  onRefresh
 }) => {
   const toggleViewMode = () => {
     onViewModeChange(viewMode === 'list' ? 'grid' : 'list');
@@ -25,14 +25,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
   return (
     <div className="toolbar">
       <div className="toolbar-group">
-        <button onClick={onNewFolder} title="New Folder" className="icon-button">
-          📁
+        <button onClick={onNewMenu} title="Create New" className="icon-button">
+          ➕
         </button>
-        <button onClick={onNewFile} title="New File" className="icon-button">
+        <button onClick={onUploadFiles} title="Upload Files" className="icon-button">
           📄
         </button>
-        <button onClick={onUpload} title="Upload File" className="icon-button">
-          📤
+        <button onClick={onUploadFolder} title="Upload Folder" className="icon-button">
+          📁
         </button>
         <button onClick={onRefresh} title="Refresh" className="icon-button">
           🔄

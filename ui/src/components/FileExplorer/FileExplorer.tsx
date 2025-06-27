@@ -22,6 +22,22 @@ const FileExplorer: React.FC = () => {
   } = useFileExplorerStore();
 
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [showNewMenu, setShowNewMenu] = useState(false);
+  const newMenuRef = React.useRef<HTMLDivElement>(null);
+
+  // Close new menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (newMenuRef.current && !newMenuRef.current.contains(e.target as Node)) {
+        setShowNewMenu(false);
+      }
+    };
+
+    if (showNewMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showNewMenu]);
 
   const loadDirectory = async (path: string) => {
     try {
@@ -94,6 +110,7 @@ const FileExplorer: React.FC = () => {
   };
 
   const handleCreateFolder = async () => {
+    setShowNewMenu(false);
     const folderName = prompt('Enter folder name:');
     if (!folderName) return;
 
@@ -110,6 +127,7 @@ const FileExplorer: React.FC = () => {
   };
 
   const handleCreateFile = async () => {
+    setShowNewMenu(false);
     const fileName = prompt('Enter file name:');
     if (!fileName) return;
 
@@ -151,8 +169,31 @@ const FileExplorer: React.FC = () => {
     loadDirectory(currentPath);
   };
 
-  const handleUpload = () => {
-    // Create a hidden file input element
+  const handleNewMenu = () => {
+    setShowNewMenu(!showNewMenu);
+  };
+
+  const handleFileUpload = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    
+    fileInput.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      const files = target.files;
+      if (!files || files.length === 0) return;
+      
+      // Trigger the upload process for each file
+      const event = new CustomEvent('upload-files', { 
+        detail: { files: Array.from(files) } 
+      });
+      window.dispatchEvent(event);
+    };
+    
+    fileInput.click();
+  };
+
+  const handleFolderUpload = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.multiple = true;
@@ -172,7 +213,6 @@ const FileExplorer: React.FC = () => {
       window.dispatchEvent(event);
     };
     
-    // Trigger the file dialog
     fileInput.click();
   };
 
@@ -181,11 +221,63 @@ const FileExplorer: React.FC = () => {
       <Toolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        onNewFolder={handleCreateFolder}
-        onNewFile={handleCreateFile}
+        onNewMenu={handleNewMenu}
+        onUploadFiles={handleFileUpload}
+        onUploadFolder={handleFolderUpload}
         onRefresh={handleRefresh}
-        onUpload={handleUpload}
       />
+      
+      {showNewMenu && (
+        <div 
+          ref={newMenuRef}
+          style={{
+            position: 'absolute',
+            top: '50px',
+            left: '10px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            zIndex: 1000,
+            minWidth: '150px'
+          }}
+        >
+          <button 
+            onClick={handleCreateFile}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '8px 16px',
+              border: 'none',
+              background: 'transparent',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            📄 New File
+          </button>
+          <button 
+            onClick={handleCreateFolder}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '8px 16px',
+              border: 'none',
+              background: 'transparent',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            📁 New Folder
+          </button>
+        </div>
+      )}
       
       <Breadcrumb 
         currentPath={currentPath}
