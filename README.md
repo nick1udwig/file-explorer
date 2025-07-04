@@ -14,3 +14,7 @@ File Explorer is a hyperapp that wraps the vfs, providing two key services:
    Initially, the only auth scheme variant is `Public` which, if set, allows anyone with the link to view the file.
 
 Creating a shareable link is just one of the options for manipulating files amongst creating, editing, etc.
+
+## Now lives in Hyperdrive
+
+Brought into Hyperdrive in [PR #779](https://github.com/hyperware-ai/hyperdrive/pull/779)
